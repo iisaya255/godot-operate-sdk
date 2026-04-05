@@ -2,7 +2,7 @@
 class_name ProjectConfig
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/config/project_config_impl.gd")
+const Internal = preload("../src/config/project_config_impl.gd")
 
 static func add_input_action(action_name: String, events: Array) -> Dictionary:
 	return Internal.add_input_action(action_name, events)

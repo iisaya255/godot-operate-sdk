@@ -1,10 +1,10 @@
 @tool
 extends RefCounted
 
-const Result = preload("res://godot-operate-sdk/src/core/sdk_result.gd")
-const PathUtils = preload("res://godot-operate-sdk/src/core/sdk_path_utils.gd")
-const FileWriter = preload("res://godot-operate-sdk/src/core/sdk_file_writer.gd")
-const NodeRules = preload("res://godot-operate-sdk/src/scene/node_rules.gd")
+const Result = preload("../core/sdk_result.gd")
+const PathUtils = preload("../core/sdk_path_utils.gd")
+const FileWriter = preload("../core/sdk_file_writer.gd")
+const NodeRules = preload("../scene/node_rules.gd")
 
 
 static func _load_scene(scene_path: String) -> Variant:

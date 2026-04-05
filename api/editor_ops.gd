@@ -2,7 +2,7 @@
 class_name EditorOps
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/editor/editor_ops_impl.gd")
+const Internal = preload("../src/editor/editor_ops_impl.gd")
 
 static func get_editor_logs(options: Dictionary = {}) -> Dictionary:
 	return Internal.get_editor_logs(options)

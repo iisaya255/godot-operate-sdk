@@ -1,16 +1,16 @@
-# godot-operate-sdk
+# godot-editor-ops-sdk
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
 Godot editor-only SDK for secondary development, supporting scene, script, resource, and file operations.
-It is not a standalone runnable SDK; you can directly integrate the code into your own project, making sure to adjust the referenced paths as needed.
+It is not a standalone runnable SDK; you can directly integrate the folder into your own project. Internal imports use relative `preload()` paths, so the SDK can live under any project path as long as the folder structure stays intact.
 
 Not headless-safe — all file-system refresh calls are guarded by `Engine.is_editor_hint()`.
 
 ## Layout
 
 ```text
-godot-operate-sdk/
+godot-editor-ops-sdk/
 |- api/                        # Public API — depend on these
 |  |- godot_sdk.gd             # Unified entry (GodotSDK.scene, .fs, …)
 |  |- scene_ops.gd             # Scene CRUD, JSON round-trip

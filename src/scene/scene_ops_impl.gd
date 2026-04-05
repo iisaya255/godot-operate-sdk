@@ -2,11 +2,11 @@
 extends RefCounted
 ## SceneOps module - scene creation, modification, and inspection
 
-const Result = preload("res://godot-operate-sdk/src/core/sdk_result.gd")
-const PathUtils = preload("res://godot-operate-sdk/src/core/sdk_path_utils.gd")
-const FileWriter = preload("res://godot-operate-sdk/src/core/sdk_file_writer.gd")
-const TypeConverter = preload("res://godot-operate-sdk/src/core/sdk_type_converter.gd")
-const NodeRules = preload("res://godot-operate-sdk/src/scene/node_rules.gd")
+const Result = preload("../core/sdk_result.gd")
+const PathUtils = preload("../core/sdk_path_utils.gd")
+const FileWriter = preload("../core/sdk_file_writer.gd")
+const TypeConverter = preload("../core/sdk_type_converter.gd")
+const NodeRules = preload("./node_rules.gd")
 
 # ---------------------------------------------------------------------------
 # create_scene_from_json

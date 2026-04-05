@@ -2,9 +2,9 @@
 extends RefCounted
 ## Resource operations implementation
 
-const Result = preload("res://godot-operate-sdk/src/core/sdk_result.gd")
-const PathUtils = preload("res://godot-operate-sdk/src/core/sdk_path_utils.gd")
-const FileWriter = preload("res://godot-operate-sdk/src/core/sdk_file_writer.gd")
+const Result = preload("../core/sdk_result.gd")
+const PathUtils = preload("../core/sdk_path_utils.gd")
+const FileWriter = preload("../core/sdk_file_writer.gd")
 
 
 static func _load_scene(scene_path: String) -> Variant:

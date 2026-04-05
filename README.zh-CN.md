@@ -1,17 +1,17 @@
-# godot-operate-sdk
+# godot-editor-ops-sdk
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
 这是一个用于二次开发的 Godot 编辑器专用 SDK，支持场景、脚本、资源和文件操作
 
-该 SDK 并非独立可运行的程序，你可以将代码直接接入到自己的项目中使用，注意根据实际情况修改引用的路径
+该 SDK 并非独立可运行的程序，你可以将整个目录直接接入自己的项目中使用。内部依赖改为相对 `preload()` 路径，只要目录结构保持不变，就不需要再手动修改引用路径
 
 不适用于无头模式(headless) - 所有文件系统刷新调用都通过 Engine.is_editor_hint() 进行保护
 
 ## 目录结构
 
 ```text
-godot-operate-sdk/
+godot-editor-ops-sdk/
 |- api/                        # 对外公开 API，供调用方依赖
 |  |- godot_sdk.gd             # 统一入口（GodotSDK.scene、.fs 等）
 |  |- scene_ops.gd             # 场景 CRUD、JSON 往返转换

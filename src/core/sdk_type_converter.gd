@@ -5,7 +5,7 @@ extends RefCounted
 ## property converter - deal _type format JSON to Godot type
 
 
-const PathUtils = preload("res://godot-operate-sdk/src/core/sdk_path_utils.gd")
+const PathUtils = preload("./sdk_path_utils.gd")
 
 static var _instance: SDKTypeConverter
 static var _property_cache: Dictionary = {}

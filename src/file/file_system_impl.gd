@@ -2,9 +2,9 @@
 extends RefCounted
 ## FileSystem Module Implementation
 
-const Result = preload("res://godot-operate-sdk/src/core/sdk_result.gd")
-const PathUtils = preload("res://godot-operate-sdk/src/core/sdk_path_utils.gd")
-const FileWriter = preload("res://godot-operate-sdk/src/core/sdk_file_writer.gd")
+const Result = preload("../core/sdk_result.gd")
+const PathUtils = preload("../core/sdk_path_utils.gd")
+const FileWriter = preload("../core/sdk_file_writer.gd")
 
 static func get_directory_tree(path: String, options: Dictionary = {}) -> Dictionary:
 	path = PathUtils.normalize_res_path(path)

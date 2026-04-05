@@ -2,7 +2,7 @@
 class_name ScriptOps
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/script/script_ops_impl.gd")
+const Internal = preload("../src/script/script_ops_impl.gd")
 
 static func create_script(path: String, content: String, base_type: String = "") -> Dictionary:
 	return Internal.create_script(path, content, base_type)

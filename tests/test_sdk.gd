@@ -1,6 +1,6 @@
 @tool
 extends EditorScript
-## godot-operate-sdk contract test suite
+## godot-editor-ops-sdk contract test suite
 ##
 ## usage: Run in Godot
 ## Tests will create temporary files under res://_sdk_test/, which will be automatically cleaned up after completion
@@ -17,7 +17,7 @@ var _current_group := ""
 
 
 func _run() -> void:
-	print("\n========== godot-operate-sdk test suite ==========\n")
+	print("\n========== godot-editor-ops-sdk test suite ==========\n")
 	_setup()
 
 	_test_file_system()
@@ -657,7 +657,7 @@ func _test_editor_ops() -> void:
 	# push_log + get_editor_logs (SDK internal buffer)
 	var ts: float = r["data"]["timestamp"]
 	# Small delay to ensure timestamps differ
-	var Internal = preload("res://godot-operate-sdk/src/editor/editor_ops_impl.gd")
+	var Internal = preload("../src/editor/editor_ops_impl.gd")
 	Internal.push_log("error", "test error message")
 	Internal.push_log("warning", "test warning message")
 	Internal.push_log("info", "test info message")
@@ -741,7 +741,7 @@ func _test_editor_ops() -> void:
 func _test_type_converter_round_trip() -> void:
 	_group("TypeConverter round-trip")
 
-	var TC = preload("res://godot-operate-sdk/src/core/sdk_type_converter.gd")
+	var TC = preload("../src/core/sdk_type_converter.gd")
 
 	# Vector2 round-trip
 	var v2 := Vector2(1.5, 2.5)

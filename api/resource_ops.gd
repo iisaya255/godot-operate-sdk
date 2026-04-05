@@ -2,7 +2,7 @@
 class_name ResourceOps
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/resource/resource_ops_impl.gd")
+const Internal = preload("../src/resource/resource_ops_impl.gd")
 
 static func bind_resource(scene_path: String, node_path: String, property: String, resource_path: String) -> Dictionary:
 	return Internal.bind_resource(scene_path, node_path, property, resource_path)

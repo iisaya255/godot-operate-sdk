@@ -2,7 +2,7 @@
 class_name SceneOps
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/scene/scene_ops_impl.gd")
+const Internal = preload("../src/scene/scene_ops_impl.gd")
 
 static func create_scene_from_json(json: Dictionary) -> Dictionary:
 	return Internal.create_scene_from_json(json)

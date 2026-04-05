@@ -2,7 +2,7 @@
 class_name FileSystem
 extends RefCounted
 
-const Internal = preload("res://godot-operate-sdk/src/file/file_system_impl.gd")
+const Internal = preload("../src/file/file_system_impl.gd")
 
 static func get_directory_tree(path: String, options: Dictionary = {}) -> Dictionary:
 	return Internal.get_directory_tree(path, options)
