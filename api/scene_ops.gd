@@ -10,6 +10,9 @@ static func create_scene_from_json(json: Dictionary) -> Dictionary:
 static func scene_to_json(scene_path: String) -> Dictionary:
 	return Internal.scene_to_json(scene_path)
 
+static func save_scene(scene_path: String, new_path: String = "") -> Dictionary:
+	return Internal.save_scene(scene_path, new_path)
+
 static func resave_scene(scene_path: String) -> Dictionary:
 	return Internal.resave_scene(scene_path)
 
