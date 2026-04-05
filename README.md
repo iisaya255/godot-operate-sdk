@@ -15,9 +15,9 @@ Not headless-safe — all file-system refresh calls are guarded by `Engine.is_ed
 godot-editor-ops-sdk/
 |- api/                        # Public API — depend on these
 |  |- godot_sdk.gd             # Unified entry (GodotSDK.scene, .fs, …)
-|  |- scene_ops.gd             # Scene CRUD, JSON round-trip
+|  |- scene_ops.gd             # Scene CRUD, JSON round-trip, save/save-as
 |  |- script_ops.gd            # Script CRUD, attach/detach
-|  |- resource_ops.gd          # Resource bind/unbind, inspection
+|  |- resource_ops.gd          # Resource bind/unbind, inspection, MeshLibrary, UID
 |  |- file_system.gd           # File/dir ops, grep
 |  |- editor_ops.gd            # Run/stop scene, open scene/script
 |  |- validation_ops.gd        # Scene, resource, script validation
@@ -38,7 +38,9 @@ godot-editor-ops-sdk/
 ```gdscript
 # Via unified entry
 GodotSDK.scene.create_scene_from_json(json)
+GodotSDK.scene.save_scene("res://scenes/main.tscn", "res://scenes/main_copy.tscn")
 GodotSDK.fs.grep("player", "res://scripts")
+GodotSDK.resource.export_mesh_library("res://scenes/tileset.tscn", "res://assets/tileset_mesh_library.tres")
 
 # Or import individual modules
 SceneOps.add_node(scene_path, parent_path, node_json)
@@ -47,6 +49,8 @@ FileSystem.read_file(path)
 ```
 
 All API methods return `{ "ok": true, "data": { ... } }` on success or `{ "ok": false, "error": "...", "code": "ERR_..." }` on failure.
+
+The API also covers scene save/save-as, MeshLibrary export, UID query/update, and scene creation or add-node flows using built-in classes, script paths, or registered global script classes as node types.
 
 ## Notes
 

@@ -36,6 +36,13 @@ func _run() -> void:
 	print("===================================================\n")
 
 
+func _supports_uids() -> bool:
+	var version := Engine.get_version_info()
+	var major := int(version.get("major", 0))
+	var minor := int(version.get("minor", 0))
+	return major > 4 or (major == 4 and minor >= 4)
+
+
 # ===================================================================
 # Setup / Teardown
 # ===================================================================
@@ -282,6 +289,31 @@ func _test_scene_ops() -> void:
 	r = SceneOps.resave_scene(scene_path)
 	_assert_ok(r, "resave_scene: success")
 
+	# save_scene with new_path
+	var copy_scene := TEST_DIR + "/test_scene_copy.tscn"
+	r = SceneOps.save_scene(scene_path, copy_scene)
+	_assert_ok(r, "save_scene: save-as success")
+	r = SceneOps.scene_to_json(copy_scene)
+	_assert_ok(r, "save_scene: save-as can be loaded")
+	_assert(r["data"]["root"]["name"] == "TestRoot", "save_scene: copied scene keeps root")
+
+	# create_scene_from_json with custom script path as node type
+	var custom_node_script := TEST_DIR + "/custom_node.gd"
+	r = ScriptOps.create_script(custom_node_script, "@tool\nextends Node2D\n")
+	_assert_ok(r, "create_scene_from_json: setup custom script node")
+	r = SceneOps.create_scene_from_json({
+		"scene_name": "_sdk_test/custom_script_scene",
+		"root": {
+			"name": "CustomRoot",
+			"type": custom_node_script,
+			"properties": {"position": {"_type": "Vector2", "x": 3, "y": 4}}
+		}
+	})
+	_assert_ok(r, "create_scene_from_json: custom script path type")
+	r = SceneOps.get_node_info("res://_sdk_test/custom_script_scene.tscn", "")
+	_assert_ok(r, "create_scene_from_json: custom script scene info")
+	_assert(r["data"]["script"] == custom_node_script, "create_scene_from_json: custom script attached")
+
 	# Error paths
 	r = SceneOps.scene_to_json("res://_sdk_test/nonexistent.tscn")
 	_assert_err(r, "scene_to_json: missing scene returns error")
@@ -471,6 +503,88 @@ func _test_resource_ops() -> void:
 
 	r = ResourceOps.bind_resource(scene_path, "Sprite", "texture", "res://_sdk_test/nonexistent.tres")
 	_assert_err(r, "bind_resource: missing resource returns error", "ERR_RESOURCE_NOT_FOUND")
+
+	# export_mesh_library
+	var mesh_scene := TEST_DIR + "/mesh_source.tscn"
+	r = SceneOps.create_scene_from_json({
+		"scene_name": "_sdk_test/mesh_source",
+		"root": {
+			"name": "MeshRoot",
+			"type": "Node3D",
+			"children": [
+				{
+					"name": "Wall",
+					"type": "Node3D",
+					"children": [
+						{
+							"name": "Mesh",
+							"type": "MeshInstance3D",
+							"properties": {
+								"mesh": {
+									"_type": "BoxMesh",
+									"size": {"_type": "Vector3", "x": 2, "y": 1, "z": 1}
+								}
+							}
+						},
+						{
+							"name": "Collision",
+							"type": "CollisionShape3D",
+							"properties": {
+								"shape": {
+									"_type": "BoxShape3D",
+									"size": {"_type": "Vector3", "x": 2, "y": 1, "z": 1}
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	})
+	_assert_ok(r, "export_mesh_library: setup mesh scene")
+	var mesh_library_path := TEST_DIR + "/mesh_library.tres"
+	r = ResourceOps.export_mesh_library(mesh_scene, mesh_library_path)
+	_assert_ok(r, "export_mesh_library: success")
+	_assert(FileAccess.file_exists(mesh_library_path), "export_mesh_library: file exists")
+	var mesh_library = load(mesh_library_path)
+	_assert(mesh_library is MeshLibrary, "export_mesh_library: loads as MeshLibrary")
+	if mesh_library is MeshLibrary:
+		_assert((mesh_library as MeshLibrary).get_item_list().size() >= 1, "export_mesh_library: contains items")
+
+	# get_uid from existing sidecar file
+	var uid_target := scene_path
+	var uid_sidecar := uid_target + ".uid"
+	var uid_file := FileAccess.open(uid_sidecar, FileAccess.WRITE)
+	if uid_file != null:
+		uid_file.store_string("uid://manual-test")
+		uid_file.close()
+	r = ResourceOps.get_uid(uid_target)
+	_assert_ok(r, "get_uid: success")
+	_assert(r["data"]["exists"] == true, "get_uid: sidecar detected")
+	_assert(r["data"]["uid"] == "uid://manual-test", "get_uid: content matches")
+
+	# update_project_uids
+	var uid_scene := TEST_DIR + "/uid_scene.tscn"
+	r = SceneOps.create_scene_from_json({
+		"scene_name": "_sdk_test/uid_scene",
+		"root": {"name": "UidRoot", "type": "Node2D"}
+	})
+	_assert_ok(r, "update_project_uids: setup scene")
+	var uid_script := TEST_DIR + "/uid_target.gd"
+	r = ScriptOps.create_script(uid_script, "extends Node\n")
+	_assert_ok(r, "update_project_uids: setup script")
+	var uid_script_sidecar_abs := ProjectSettings.globalize_path(uid_script + ".uid")
+	if FileAccess.file_exists(uid_script + ".uid"):
+		DirAccess.remove_absolute(uid_script_sidecar_abs)
+	r = ResourceOps.update_project_uids(TEST_DIR)
+	_assert_ok(r, "update_project_uids: success")
+	_assert(r["data"]["scenes_processed"] >= 1, "update_project_uids: processed scenes")
+	r = ResourceOps.get_uid(uid_script)
+	_assert_ok(r, "update_project_uids: get_uid after refresh")
+	if _supports_uids():
+		_assert(r["data"]["exists"] == true, "update_project_uids: script UID generated on supported versions")
+	else:
+		_assert(r["data"].has("exists"), "update_project_uids: reports existence on older versions")
 
 
 # ===================================================================

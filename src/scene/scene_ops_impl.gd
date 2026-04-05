@@ -61,24 +61,40 @@ static func scene_to_json(scene_path: String) -> Dictionary:
 	return Result.ok({"scene_name": scene_name, "root": root_json})
 
 # ---------------------------------------------------------------------------
+# save_scene
+# ---------------------------------------------------------------------------
+
+static func save_scene(scene_path: String, new_path: String = "") -> Dictionary:
+	scene_path = PathUtils.normalize_res_path(scene_path)
+	if not ResourceLoader.exists(scene_path):
+		return Result.err("Scene not found: %s" % scene_path, "ERR_NOT_FOUND")
+
+	var packed := load(scene_path) as PackedScene
+	if packed == null:
+		return Result.err("Failed to load scene: %s" % scene_path, "ERR_LOAD_FAILED")
+
+	var root := packed.instantiate()
+	if root == null:
+		return Result.err("Failed to instantiate scene: %s" % scene_path, "ERR_INSTANTIATE_FAILED")
+
+	var save_path := scene_path if new_path.is_empty() else PathUtils.normalize_res_path(new_path)
+	_set_owner_recursive(root, root)
+
+	var write_result := FileWriter.write_scene(root, save_path, true)
+	root.free()
+	if not write_result.get("ok", false):
+		return Result.err(write_result.get("error", "Write failed"), "ERR_WRITE_FAILED")
+
+	return Result.ok({"scene_path": scene_path, "save_path": save_path})
+
+# ---------------------------------------------------------------------------
 # resave_scene — re-load and re-serialize the scene file on disk.
 # This does NOT save in-editor unsaved modifications; it re-packs the
 # already-persisted data.  Useful after external edits to normalise the file.
 # ---------------------------------------------------------------------------
 
 static func resave_scene(scene_path: String) -> Dictionary:
-	scene_path = PathUtils.normalize_res_path(scene_path)
-	if not ResourceLoader.exists(scene_path):
-		return Result.err("Scene not found: %s" % scene_path, "ERR_NOT_FOUND")
-	var packed := load(scene_path) as PackedScene
-	if packed == null:
-		return Result.err("Failed to load scene: %s" % scene_path, "ERR_LOAD_FAILED")
-	var err := ResourceSaver.save(packed, scene_path)
-	if err != OK:
-		return Result.err("Save failed: %d" % err, "ERR_WRITE_FAILED")
-	if Engine.is_editor_hint():
-		EditorInterface.get_resource_filesystem().update_file(scene_path)
-	return Result.ok({"scene_path": scene_path})
+	return save_scene(scene_path)
 
 # ---------------------------------------------------------------------------
 # add_node
@@ -105,7 +121,6 @@ static func add_node(scene_path: String, parent_path: String, node_json: Diction
 	var new_node: Node = build_result["node"]
 
 	parent.add_child(new_node)
-	new_node.set_owner(root)
 	_set_owner_recursive(new_node, root)
 
 	var write_result := FileWriter.write_scene(root, scene_path, true)
@@ -204,7 +219,6 @@ static func move_node(scene_path: String, node_path: String, new_parent: String)
 
 	_clear_owner_recursive(target)
 	target.reparent(parent_node)
-	target.set_owner(root)
 	_set_owner_recursive(target, root)
 
 	var write_result := FileWriter.write_scene(root, scene_path, true)
@@ -279,13 +293,52 @@ static func _load_and_instantiate(scene_path: String) -> Dictionary:
 		return Result.err("Failed to instantiate scene: %s" % scene_path, "ERR_INSTANTIATE_FAILED")
 	return {"ok": true, "root": root}
 
+static func _get_script_by_name(type_name: String) -> Script:
+	var normalized_path := PathUtils.normalize_res_path(type_name)
+	if (PathUtils.is_resource_path(type_name) or type_name.ends_with(".gd")) and ResourceLoader.exists(normalized_path, "Script"):
+		var direct_script = load(normalized_path)
+		if direct_script is Script:
+			return direct_script
+
+	for global_class in ProjectSettings.get_global_class_list():
+		if str(global_class.get("class", "")) != type_name:
+			continue
+		var script_path := str(global_class.get("path", ""))
+		if script_path.is_empty():
+			continue
+		if not ResourceLoader.exists(script_path, "Script"):
+			continue
+		var script = load(script_path)
+		if script is Script:
+			return script
+
+	return null
+
+static func _instantiate_node_type(type_name: String) -> Dictionary:
+	if type_name.is_empty():
+		return Result.err("Node type cannot be empty", "ERR_INVALID_INPUT")
+
+	if ClassDB.class_exists(type_name) and ClassDB.can_instantiate(type_name):
+		var built_in = ClassDB.instantiate(type_name)
+		if built_in is Node:
+			return Result.ok({"node": built_in})
+
+	var script := _get_script_by_name(type_name)
+	if not (script is Script):
+		return Result.err("Failed to instantiate node type: %s" % type_name, "ERR_INSTANTIATE_FAILED")
+
+	var instance = script.new()
+	if not (instance is Node):
+		return Result.err("Script type is not a Node: %s" % type_name, "ERR_INSTANTIATE_FAILED")
+
+	return Result.ok({"node": instance})
+
 static func _build_node(node_data: Dictionary) -> Dictionary:
 	var type_name: String = node_data.get("type", "Node")
-	if not ClassDB.class_exists(type_name) or not ClassDB.can_instantiate(type_name):
-		return Result.err("Failed to instantiate node type: %s" % type_name, "ERR_INSTANTIATE_FAILED")
-	var node: Node = ClassDB.instantiate(type_name)
-	if node == null:
-		return Result.err("Failed to instantiate node type: %s" % type_name, "ERR_INSTANTIATE_FAILED")
+	var instantiate_result := _instantiate_node_type(type_name)
+	if not instantiate_result.get("ok", false):
+		return instantiate_result
+	var node: Node = instantiate_result["data"]["node"]
 
 	var node_name: String = node_data.get("name", type_name)
 	if not node_name.is_empty():
@@ -347,8 +400,9 @@ static func _get_property_info(node: Node, property_name: String) -> Dictionary:
 	return {}
 
 static func _set_owner_recursive(node: Node, owner: Node) -> void:
+	if node != owner and node.get_owner() != owner:
+		node.set_owner(owner)
 	for child in node.get_children():
-		child.set_owner(owner)
 		_set_owner_recursive(child, owner)
 
 static func _clear_owner_recursive(node: Node) -> void:
